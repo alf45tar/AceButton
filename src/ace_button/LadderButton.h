@@ -58,7 +58,6 @@ class LadderButtonConfig : public ButtonConfig {
       uint8_t   tolerance;    //  Valid +/- tolerance range around threshold for a button
       uint8_t   id;           //  Identifier for this button
     } AnalogButtons_t;
-    */
 
     /**
      * @param pinA the pin number representing bit0 of the binary encoder
@@ -83,12 +82,14 @@ class LadderButtonConfig : public ButtonConfig {
      * virtual pin was pushed.
      */
     int readButton(uint8_t pin) override {
-      int s0 = analogRead(mPinA);
-
+      int sa = analogRead(mPinA);
+      uint8_t i = 0;
+      while (i < mabSize && ((sa < ab[i].threshold - ab[i].tolerance) || (sa > ab[i].threshold + ab[i].tolerance))) i++;
+      if (i == mabSize) return (mPressedState ^ 0x1);
 
       // Convert the actual pins states into a binary number which becomes
       // the encoded virtual pin numbers of the buttons.
-      uint8_t virtualPin = (s0 == mPressedState) | ((s1 == mPressedState) << 1);
+      uint8_t virtualPin = ab[i].value;
       return (virtualPin == pin) ? mPressedState : (mPressedState ^ 0x1);
     }
 
