@@ -89,7 +89,7 @@ class LadderButtonConfig : public ButtonConfig {
 
       // Convert the actual pins states into a binary number which becomes
       // the encoded virtual pin numbers of the buttons.
-      uint8_t virtualPin = mab[i].value;
+      uint8_t virtualPin = mab[i].id;
       return (virtualPin == pin) ? mPressedState : (mPressedState ^ 0x1);
     }
 
