@@ -69,7 +69,7 @@ class LadderButtonConfig : public ButtonConfig {
      * HIGH. The default value is HIGH.
      */
     LadderButtonConfig(uint8_t pinA,
-        AnalogButtons_t* ab, uint8_t abSize
+        AnalogButtons_t* ab, uint8_t abSize,
         uint8_t defaultReleasedState = HIGH):
       mPinA(pinA),
       mab(ab),
@@ -84,12 +84,12 @@ class LadderButtonConfig : public ButtonConfig {
     int readButton(uint8_t pin) override {
       int sa = analogRead(mPinA);
       uint8_t i = 0;
-      while (i < mabSize && ((sa < ab[i].threshold - ab[i].tolerance) || (sa > ab[i].threshold + ab[i].tolerance))) i++;
+      while (i < mabSize && ((sa < mab[i].threshold - mab[i].tolerance) || (sa > mab[i].threshold + mab[i].tolerance))) i++;
       if (i == mabSize) return (mPressedState ^ 0x1);
 
       // Convert the actual pins states into a binary number which becomes
       // the encoded virtual pin numbers of the buttons.
-      uint8_t virtualPin = ab[i].value;
+      uint8_t virtualPin = mab[i].value;
       return (virtualPin == pin) ? mPressedState : (mPressedState ^ 0x1);
     }
 
