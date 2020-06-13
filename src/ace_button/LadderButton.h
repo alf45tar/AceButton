@@ -22,8 +22,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
 
-#ifndef ACE_BUTTON_ENCODED_4TO2_BUTTON_CONFIG_H
-#define ACE_BUTTON_ENCODED_4TO2_BUTTON_CONFIG_H
+#ifndef ACE_BUTTON_LADDER_BUTTON_CONFIG_H
+#define ACE_BUTTON_LADDER_BUTTON_CONFIG_H
 
 #include "ButtonConfig.h"
 
@@ -44,12 +44,24 @@ namespace ace_button {
  * Button S0 cannot be used because the code 00 is used to indicate that no
  * button was pressed.
  */
-class Encoded4To2ButtonConfig : public ButtonConfig {
+class LadderButtonConfig : public ButtonConfig {
   public:
+    /**
+     * Data table for button values
+     *
+     * The readButton() will use this table to determine which button has been pressed
+     * and return the specified identifier.
+     */
+    typedef struct
+    {
+      uint16_t  threshold;    //  Average analog value of the button
+      uint8_t   tolerance;    //  Valid +/- tolerance range around threshold for a button
+      uint8_t   id;           //  Identifier for this button
+    } AnalogButtons_t;
+    */
 
     /**
-     * @param pin0 the pin number representing bit0 of the binary encoder
-     * @param pin1 the pin number representing bit1 of the binary encoder
+     * @param pinA the pin number representing bit0 of the binary encoder
      * @param defaultReleasedState state of the encoder bit when the button
      * is in the released state. For a pull-up wiring, the state of the pin is
      * HIGH when the button is released. This value is used to configure wiring
@@ -57,10 +69,12 @@ class Encoded4To2ButtonConfig : public ButtonConfig {
      * buttons. The LS74148 encoder uses a pull-up wiring, so this should be set
      * HIGH. The default value is HIGH.
      */
-    Encoded4To2ButtonConfig(uint8_t pin0, uint8_t pin1,
+    LadderButtonConfig(uint8_t pinA,
+        AnalogButtons_t* ab, uint8_t abSize
         uint8_t defaultReleasedState = HIGH):
-      mPin0(pin0),
-      mPin1(pin1),
+      mPinA(pinA),
+      mab(ab),
+      mabSize(abSize),
       mPressedState(defaultReleasedState ^ 0x1) {}
 
     /**
@@ -69,8 +83,8 @@ class Encoded4To2ButtonConfig : public ButtonConfig {
      * virtual pin was pushed.
      */
     int readButton(uint8_t pin) override {
-      int s0 = digitalRead(mPin0);
-      int s1 = digitalRead(mPin1);
+      int s0 = analogRead(mPinA);
+
 
       // Convert the actual pins states into a binary number which becomes
       // the encoded virtual pin numbers of the buttons.
@@ -79,8 +93,9 @@ class Encoded4To2ButtonConfig : public ButtonConfig {
     }
 
   private:
-    const uint8_t mPin0;
-    const uint8_t mPin1;
+    const uint8_t mPinA;
+    const AnalogButtons_t*  mab;       // analog values table
+    const uint8_t           mabSize;   // number of elements in analog table
     const uint8_t mPressedState;
 };
 
