@@ -30,27 +30,14 @@ SOFTWARE.
 namespace ace_button {
 
 /**
- * A ButtonConfig that handles an 4-to-2 binary encoder which converts 4 inputs
- * into 2 outputs. In practice, this means that 3 buttons can be handled with 2
- * pins, because the 0th button is used to represent "no button pressed". One
- * easy way to perform the 4-to-2 encoding is to use 2 diodes with 3 switches,
- * so that each switch translates into a 2-bit binary number:
- *
- *  * S0 = 00 = 0 [unavailable, see below]
- *  * S1 = 01 = 1
- *  * S2 = 10 = 2
- *  * S3 = 11 = 3
- *
- * Button S0 cannot be used because the code 00 is used to indicate that no
- * button was pressed.
+ * A ButtonConfig that handles a multi-button input resistor ladder
  */
 class LadderButtonConfig : public ButtonConfig {
   public:
     /**
      * Data table for button values
      *
-     * The readButton() will use this table to determine which button has been pressed
-     * and return the specified identifier.
+     * The readButton() will use this table to determine which button has been pressed.
      */
     typedef struct
     {
@@ -60,13 +47,12 @@ class LadderButtonConfig : public ButtonConfig {
     } AnalogButtons_t;
 
     /**
-     * @param pinA the pin number representing bit0 of the binary encoder
+     * @param pinA the pin number of the analog input pin
      * @param defaultReleasedState state of the encoder bit when the button
      * is in the released state. For a pull-up wiring, the state of the pin is
      * HIGH when the button is released. This value is used to configure wiring
      * of the virtual button, so that it matches the wiring of the physical
-     * buttons. The LS74148 encoder uses a pull-up wiring, so this should be set
-     * HIGH. The default value is HIGH.
+     * buttons. The default value is HIGH.
      */
     LadderButtonConfig(uint8_t pinA,
         AnalogButtons_t* ab, uint8_t abSize,
@@ -82,15 +68,19 @@ class LadderButtonConfig : public ButtonConfig {
      * virtual pin was pushed.
      */
     int readButton(uint8_t pin) override {
-      int sa = analogRead(mPinA);
-      uint8_t i = 0;
-      while (i < mabSize && ((sa < mab[i].threshold - mab[i].tolerance) || (sa > mab[i].threshold + mab[i].tolerance))) i++;
-      if (i == mabSize) return (mPressedState ^ 0x1);
+      
+      uint8_t  i  = 0;
+      uint16_t ab = analogRead(mPinA);
+      
+      while (i < mabSize && ((ab < mab[i].threshold - mab[i].tolerance) ||
+                             (ab > mab[i].threshold + mab[i].tolerance)))
+        i++;
+      
+      if (i == mabSize)                 // The analog value is not within any button range
+        return (mPressedState ^ 0x1);   // No button pressed
 
-      // Convert the actual pins states into a binary number which becomes
-      // the encoded virtual pin numbers of the buttons.
-      uint8_t virtualPin = mab[i].id;
-      return (virtualPin == pin) ? mPressedState : (mPressedState ^ 0x1);
+      // Return pressed only if the pressed button is equal to the requested virtual button (pin)
+      return (mab[i].id == pin) ? mPressedState : (mPressedState ^ 0x1);
     }
 
   private:
