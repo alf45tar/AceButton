@@ -162,6 +162,8 @@ class ButtonConfig {
 
     /** Constructor. */
     ButtonConfig() {}
+    /** Destructor. */
+    virtual ~ButtonConfig() = default;
 
     // These configuration methods are virtual so that they can be overriddden.
     // Subclasses can override at the class-level by defining a new virtual
